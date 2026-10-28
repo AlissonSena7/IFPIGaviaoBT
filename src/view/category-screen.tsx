@@ -31,7 +31,20 @@ export default function CategoryScreen({
     carregando,
     produtos,
     nomeCategoria,
+    erro,
   } = useCategoriaViewModel(id);
+
+  if (erro) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Ionicons name="alert-circle" size={48} color="#dc3545" />
+        <Text style={[styles.loadingTexto, { color: "#dc3545" }]}>{erro}</Text>
+        <TouchableOpacity style={styles.botaoVoltar} onPress={onVoltar}>
+          <Text style={[styles.textoVoltar, { color: "#501673", marginTop: 10 }]}>Voltar ao Início</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.tela}>

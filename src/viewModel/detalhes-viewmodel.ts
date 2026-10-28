@@ -1,11 +1,21 @@
 import { useEffect, useState } from "react";
-import { buscarProdutoPorId } from "../model/produto-datasource";
-import { Produto } from "../model/categoria";
+import { container } from "../di/container";
+import { Produto } from "../model/entities/produto";
+import { DomainError } from "../model/error";
+import { IMenuUseCase } from "../useCase/iMenuUseCase";
 
-export function useDetalhesViewModel(id?: string) {
+/**
+ * ViewModel da tela de Detalhes do Produto.
+ * Utiliza o MenuUseCase para buscar as informações de um produto específico.
+ */
+export function useDetalhesViewModel(
+  id?: string,
+  menuUseCase: IMenuUseCase = container.getMenuUseCase(),
+) {
   const [carregando, setCarregando] = useState(true);
   const [produto, setProduto] = useState<Produto | undefined>();
   const [quantidade, setQuantidade] = useState(1);
+  const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
     async function carregarProduto() {
@@ -16,19 +26,25 @@ export function useDetalhesViewModel(id?: string) {
 
       try {
         setCarregando(true);
+        setErro(null);
 
-        const resultado = await buscarProdutoPorId(id);
-
+        const resultado = await menuUseCase.obterProdutoPorId(id);
         setProduto(resultado);
-      } catch (erro) {
-        console.error("Erro ao buscar produto:", erro);
+      } catch (e) {
+        console.error("Erro ao buscar produto:", e);
+
+        if (e instanceof DomainError) {
+          setErro(e.message);
+        } else {
+          setErro("Não foi possível carregar os detalhes do produto.");
+        }
       } finally {
         setCarregando(false);
       }
     }
 
     carregarProduto();
-  }, [id]);
+  }, [id, menuUseCase]);
 
   function incrementarQuantidade() {
     setQuantidade((prev) => prev + 1);
@@ -42,6 +58,7 @@ export function useDetalhesViewModel(id?: string) {
     carregando,
     produto,
     quantidade,
+    erro,
     incrementarQuantidade,
     decrementarQuantidade,
   };
